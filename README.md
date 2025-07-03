@@ -15,7 +15,11 @@
       margin: auto;
       display: none;
     }
-    #start-btn {
+    #result-box {
+      margin-top: 20px;
+      display: none;
+    }
+    #start-btn, #copy-btn {
       padding: 10px 20px;
       font-size: 16px;
       margin-top: 20px;
@@ -28,11 +32,18 @@
   <button id="start-btn">Mulai Scan</button>
   <div id="reader"></div>
 
+  <div id="result-box">
+    <p><strong>Hasil Scan:</strong> <span id="result-text"></span></p>
+    <button id="copy-btn">Salin & Buka Link</button>
+  </div>
+
   <script>
+    let scannedText = "";
+    
     document.getElementById("start-btn").addEventListener("click", function () {
       const readerDiv = document.getElementById("reader");
       readerDiv.style.display = "block";
-      this.style.display = "none"; // sembunyikan tombol
+      this.style.display = "none";
 
       const html5QrCode = new Html5Qrcode("reader");
 
@@ -40,29 +51,31 @@
         { facingMode: "environment" },
         { fps: 10, qrbox: 250 },
         (decodedText) => {
-          if (!window.scanned) {
-            window.scanned = true;
+          if (!scannedText) {
+            scannedText = decodedText;
 
-            // Salin hasil scan
-            navigator.clipboard.writeText(decodedText)
-              .then(() => {
-                console.log("Tersalin:", decodedText);
-              })
-              .catch(err => {
-                alert("Gagal menyalin: " + err);
-              });
-
-            // Redirect setelah delay
-            setTimeout(() => {
-              const targetURL = `http://52.74.69.49/admin/#/admin/orderprojectscan?code=${encodeURIComponent(decodedText)}`;
-              window.location.href = targetURL;
-            }, 1000);
+            document.getElementById("result-text").textContent = scannedText;
+            document.getElementById("result-box").style.display = "block";
+            html5QrCode.stop(); // stop scanner
           }
         },
         (errorMessage) => {
-          // bisa tampilkan pesan error kalau mau
+          // do nothing
         }
       );
+    });
+
+    document.getElementById("copy-btn").addEventListener("click", () => {
+      if (scannedText) {
+        navigator.clipboard.writeText(scannedText)
+          .then(() => {
+            const targetURL = `http://52.74.69.49/admin/#/admin/orderprojectscan?code=${encodeURIComponent(scannedText)}`;
+            window.location.href = targetURL;
+          })
+          .catch(err => {
+            alert("Gagal menyalin ke clipboard: " + err);
+          });
+      }
     });
   </script>
 </body>
