@@ -51,6 +51,21 @@
   <script>
     let scannedText = "";
 
+    // Saat halaman dimuat, ambil pilihan terakhir dari localStorage
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedStage = localStorage.getItem("selectedStage");
+      if (savedStage) {
+        document.getElementById("stage").value = savedStage;
+      }
+    });
+
+    // Simpan pilihan baru jika dropdown berubah
+    document.getElementById("stage").addEventListener("change", () => {
+      const selectedStage = document.getElementById("stage").value;
+      localStorage.setItem("selectedStage", selectedStage);
+    });
+
+    // Mulai scan
     document.getElementById("start-btn").addEventListener("click", () => {
       document.getElementById("reader").style.display = "block";
       document.getElementById("start-btn").style.display = "none";
@@ -68,18 +83,21 @@
           }
         },
         (errorMessage) => {
-          // ignore error
+          // Bisa tambahkan alert kalau mau
         }
       );
     });
 
+    // Setelah scan, salin dan buka halaman tujuan
     document.getElementById("copy-btn").addEventListener("click", () => {
       const stage = document.getElementById("stage").value;
       if (scannedText) {
+        // Salin ke clipboard
         navigator.clipboard.writeText(scannedText).catch(() => {
-          // gagal salin? lanjut saja ke redirect
+          // Tidak masalah jika gagal menyalin
         });
 
+        // Arahkan ke halaman tujuan
         const targetURL = `http://52.74.69.49/admin/#/admin/orderprojectscan?code=${encodeURIComponent(scannedText)}&stage=${encodeURIComponent(stage)}`;
         window.location.href = targetURL;
       }
