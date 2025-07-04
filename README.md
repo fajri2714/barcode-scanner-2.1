@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Scan Barcode</title>
-  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -45,22 +45,16 @@
   <p class="status" id="statusText"></p>
 
   <script>
+    const Html5QrcodeSupportedFormats = window.Html5QrcodeSupportedFormats;
+
     const html5QrCode = new Html5Qrcode("reader");
 
     function onScanSuccess(decodedText) {
       if (!window.scanned) {
         window.scanned = true;
-
         document.getElementById("statusText").innerText = "✅ Barcode Terdeteksi:\n" + decodedText;
 
-        // Salin ke clipboard
-        navigator.clipboard.writeText(decodedText).then(() => {
-          console.log("📋 Barcode disalin:", decodedText);
-        }).catch(err => {
-          console.warn("❌ Gagal salin:", err);
-        });
-
-        // Redirect ke halaman tujuan
+        navigator.clipboard.writeText(decodedText).catch(() => {});
         const tujuan = `http://52.74.69.49/admin/#/admin/orderprojectscan?code=${encodeURIComponent(decodedText)}`;
         setTimeout(() => {
           window.location.href = tujuan;
@@ -68,9 +62,9 @@
       }
     }
 
-    function onScanError(errorMessage) {
-      // Silent error
-      console.warn("Scan gagal:", errorMessage);
+    function onScanError(err) {
+      // Optional: tampilkan jika perlu
+      // document.getElementById("statusText").innerText = "Tidak berhasil scan: " + err;
     }
 
     const config = {
@@ -92,7 +86,8 @@
       onScanSuccess,
       onScanError
     ).catch(err => {
-      document.getElementById("statusText").innerText = "❌ Kamera gagal dibuka: " + err;
+      document.getElementById("statusText").innerText = "❌ Gagal memulai scanner: " + err;
+      console.error("Scanner error:", err);
     });
   </script>
 </body>
