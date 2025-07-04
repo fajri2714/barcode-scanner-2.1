@@ -1,107 +1,93 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Scan Barcode Project</title>
+  <title>Scanner Barcode</title>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
-      font-family: sans-serif;
-      text-align: center;
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f2f2f2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      height: 100vh;
       padding: 20px;
     }
+
+    h1 {
+      color: #333;
+      font-size: 1.5rem;
+      margin-top: 20px;
+    }
+
     #reader {
-      width: 300px;
-      margin: 20px auto;
-      display: none;
+      width: 90%;
+      max-width: 400px;
+      margin: 30px auto;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      overflow: hidden;
     }
-    #result-box {
-      margin-top: 20px;
-      display: none;
+
+    .info {
+      color: #666;
+      font-size: 0.95rem;
+      margin-top: -10px;
     }
-    button, select {
-      padding: 10px 20px;
-      font-size: 16px;
-      margin-top: 20px;
+
+    footer {
+      position: fixed;
+      bottom: 10px;
+      font-size: 0.8rem;
+      color: #aaa;
     }
   </style>
 </head>
 <body>
-  <h2>Scan Barcode Project</h2>
 
-  <label for="stage">Pilih Tahapan Produksi:</label>
-  <br>
-  <select id="stage">
-    <option value="Printing">Printing</option>
-    <option value="Positioning">Positioning</option>
-    <option value="Quality Control">Quality Control</option>
-    <option value="Heat Press">Heat Press</option>
-    <option value="Finish">Finish</option>
-  </select>
+  <h1>🔍 Scan Barcode Project</h1>
+  <p class="info">Arahkan kamera ke barcode. Setelah berhasil, kamu akan langsung diarahkan.</p>
 
-  <br><br>
-  <button id="start-btn">Mulai Scan</button>
   <div id="reader"></div>
 
-  <div id="result-box">
-    <p><strong>Hasil Scan:</strong> <span id="result-text"></span></p>
-    <button id="copy-btn">Salin & Buka Tujuan</button>
-  </div>
+  <footer>© 2025 fajri2714</footer>
 
   <script>
-    let scannedText = "";
+    function onScanSuccess(decodedText) {
+      if (!window.scanned) {
+        window.scanned = true;
 
-    // Saat halaman dimuat, ambil pilihan terakhir dari localStorage
-    window.addEventListener('DOMContentLoaded', () => {
-      const savedStage = localStorage.getItem("selectedStage");
-      if (savedStage) {
-        document.getElementById("stage").value = savedStage;
-      }
-    });
-
-    // Simpan pilihan baru jika dropdown berubah
-    document.getElementById("stage").addEventListener("change", () => {
-      const selectedStage = document.getElementById("stage").value;
-      localStorage.setItem("selectedStage", selectedStage);
-    });
-
-    // Mulai scan
-    document.getElementById("start-btn").addEventListener("click", () => {
-      document.getElementById("reader").style.display = "block";
-      document.getElementById("start-btn").style.display = "none";
-
-      const html5QrCode = new Html5Qrcode("reader");
-      html5QrCode.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: 250 },
-        (decodedText) => {
-          if (!scannedText) {
-            scannedText = decodedText;
-            document.getElementById("result-text").textContent = scannedText;
-            document.getElementById("result-box").style.display = "block";
-            html5QrCode.stop();
-          }
-        },
-        (errorMessage) => {
-          // Bisa tambahkan alert kalau mau
-        }
-      );
-    });
-
-    // Setelah scan, salin dan buka halaman tujuan
-    document.getElementById("copy-btn").addEventListener("click", () => {
-      const stage = document.getElementById("stage").value;
-      if (scannedText) {
-        // Salin ke clipboard
-        navigator.clipboard.writeText(scannedText).catch(() => {
-          // Tidak masalah jika gagal menyalin
+        // Salin hasil ke clipboard (jika diizinkan)
+        navigator.clipboard.writeText(decodedText).catch((err) => {
+          console.warn("Gagal menyalin ke clipboard:", err);
         });
 
-        // Arahkan ke halaman tujuan
-        const targetURL = `http://52.74.69.49/admin/#/admin/orderprojectscan?code=${encodeURIComponent(scannedText)}&stage=${encodeURIComponent(stage)}`;
-        window.location.href = targetURL;
+        // Redirect ke halaman tujuan
+        const targetURL = `http://52.74.69.49/admin/#/admin/orderprojectscan?code=${encodeURIComponent(decodedText)}`;
+        setTimeout(() => {
+          window.location.href = targetURL;
+        }, 500); // 0.5 detik delay
       }
-    });
+    }
+
+    function onScanError(errorMessage) {
+      // Silent error
+    }
+
+    const html5QrCode = new Html5Qrcode("reader");
+    html5QrCode.start(
+      { facingMode: "environment" },
+      {
+        fps: 10,
+        qrbox: { width: 250, height: 250 }
+      },
+      onScanSuccess,
+      onScanError
+    );
   </script>
 </body>
 </html>
