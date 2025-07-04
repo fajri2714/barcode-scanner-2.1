@@ -57,6 +57,22 @@
   <script>
     let scannedText = "";
 
+    // Cek status izin kamera
+    if (navigator.permissions) {
+      navigator.permissions.query({ name: 'camera' }).then(permissionStatus => {
+        console.log("Status izin kamera:", permissionStatus.state); // granted / prompt / denied
+
+        // Jika mau, kamu bisa tampilkan pesan ke user berdasarkan status ini
+        if (permissionStatus.state === 'denied') {
+          alert("Akses kamera ditolak. Harap izinkan akses dari pengaturan browser.");
+        }
+      }).catch(err => {
+        console.warn("Tidak bisa membaca status izin kamera:", err);
+      });
+    } else {
+      console.warn("Browser ini tidak mendukung navigator.permissions");
+    }
+
     document.getElementById("start-btn").addEventListener("click", function () {
       const readerDiv = document.getElementById("reader");
       readerDiv.style.display = "block";
@@ -90,7 +106,7 @@
           }
         },
         (errorMessage) => {
-          // opsional: bisa tampilkan log kesalahan
+          // opsional log kesalahan
           // console.warn(`Scan error: ${errorMessage}`);
         }
       ).catch((err) => {
