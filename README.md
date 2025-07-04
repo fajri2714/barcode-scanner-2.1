@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
   <meta charset="UTF-8">
   <title>Scan Barcode Project</title>
@@ -8,28 +8,45 @@
     body {
       font-family: sans-serif;
       text-align: center;
-      padding: 20px;
+      background-color: #f4f6f8;
+      margin: 0;
+      padding: 30px;
+    }
+    h2 {
+      color: #007bff;
     }
     #reader {
-      width: 300px;
-      margin: auto;
+      width: 90%;
+      max-width: 400px;
+      margin: 20px auto;
+      border-radius: 12px;
       display: none;
     }
     #result-box {
       margin-top: 20px;
       display: none;
     }
-    #start-btn, #copy-btn {
+    button {
       padding: 10px 20px;
       font-size: 16px;
-      margin-top: 20px;
+      margin-top: 15px;
+      border: none;
+      border-radius: 8px;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
     }
   </style>
 </head>
 <body>
+
   <h2>Scan Barcode Project</h2>
   <p>Tekan tombol di bawah untuk mulai scan.</p>
   <button id="start-btn">Mulai Scan</button>
+
   <div id="reader"></div>
 
   <div id="result-box">
@@ -39,7 +56,7 @@
 
   <script>
     let scannedText = "";
-    
+
     document.getElementById("start-btn").addEventListener("click", function () {
       const readerDiv = document.getElementById("reader");
       readerDiv.style.display = "block";
@@ -48,21 +65,38 @@
       const html5QrCode = new Html5Qrcode("reader");
 
       html5QrCode.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: 250 },
+        {
+          facingMode: { exact: "environment" },
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        },
+        {
+          fps: 30,
+          qrbox: 350,
+          aspectRatio: 1.0
+        },
         (decodedText) => {
           if (!scannedText) {
             scannedText = decodedText;
 
             document.getElementById("result-text").textContent = scannedText;
             document.getElementById("result-box").style.display = "block";
-            html5QrCode.stop(); // stop scanner
+
+            html5QrCode.stop().then(() => {
+              console.log("Scanner berhenti.");
+            }).catch((err) => {
+              console.error("Gagal stop:", err);
+            });
           }
         },
         (errorMessage) => {
-          // do nothing
+          // opsional: bisa tampilkan log kesalahan
+          // console.warn(`Scan error: ${errorMessage}`);
         }
-      );
+      ).catch((err) => {
+        alert("Gagal mengakses kamera belakang. Periksa izin kamera atau gunakan browser lain.");
+        console.error("Camera error:", err);
+      });
     });
 
     document.getElementById("copy-btn").addEventListener("click", () => {
