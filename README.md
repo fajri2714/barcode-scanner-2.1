@@ -39,6 +39,11 @@
     button:hover {
       background-color: #0056b3;
     }
+    #permission-info {
+      font-size: 14px;
+      color: #555;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
@@ -46,6 +51,7 @@
   <h2>Scan Barcode Project</h2>
   <p>Tekan tombol di bawah untuk mulai scan.</p>
   <button id="start-btn">Mulai Scan</button>
+  <p id="permission-info"></p>
 
   <div id="reader"></div>
 
@@ -60,17 +66,16 @@
     // Cek status izin kamera
     if (navigator.permissions) {
       navigator.permissions.query({ name: 'camera' }).then(permissionStatus => {
-        console.log("Status izin kamera:", permissionStatus.state); // granted / prompt / denied
+        console.log("Status izin kamera:", permissionStatus.state);
+        document.getElementById("permission-info").textContent =
+          "Status izin kamera: " + permissionStatus.state;
 
-        // Jika mau, kamu bisa tampilkan pesan ke user berdasarkan status ini
         if (permissionStatus.state === 'denied') {
-          alert("Akses kamera ditolak. Harap izinkan akses dari pengaturan browser.");
+          alert("Akses kamera ditolak. Aktifkan dari pengaturan browser.");
         }
       }).catch(err => {
         console.warn("Tidak bisa membaca status izin kamera:", err);
       });
-    } else {
-      console.warn("Browser ini tidak mendukung navigator.permissions");
     }
 
     document.getElementById("start-btn").addEventListener("click", function () {
@@ -81,11 +86,7 @@
       const html5QrCode = new Html5Qrcode("reader");
 
       html5QrCode.start(
-        {
-          facingMode: { exact: "environment" },
-          width: { ideal: 1920 },
-          height: { ideal: 1080 }
-        },
+        { facingMode: "environment" }, // Lebih aman untuk semua browser
         {
           fps: 30,
           qrbox: 350,
@@ -106,12 +107,11 @@
           }
         },
         (errorMessage) => {
-          // opsional log kesalahan
-          // console.warn(`Scan error: ${errorMessage}`);
+          // console.warn("Scan gagal:", errorMessage);
         }
       ).catch((err) => {
-        alert("Gagal mengakses kamera belakang. Periksa izin kamera atau gunakan browser lain.");
-        console.error("Camera error:", err);
+        alert("Gagal mengakses kamera. Periksa izin atau coba browser lain.");
+        console.error("Error start scanner:", err);
       });
     });
 
