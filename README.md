@@ -1,116 +1,86 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <title>Scan Barcode Project</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Scan Barcode</title>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
-      margin: 0;
       font-family: 'Segoe UI', sans-serif;
-      background: #f9f9f9;
+      background: #f5f6fa;
       display: flex;
       flex-direction: column;
       align-items: center;
       padding: 20px;
+      color: #333;
     }
-
-    h1 {
-      margin-top: 20px;
-      color: #2c3e50;
+    h2 {
+      margin-bottom: 10px;
+      color: #2f80ed;
     }
-
     #reader {
-      width: 90%;
+      width: 100%;
       max-width: 400px;
+      margin: 20px auto;
       border-radius: 10px;
       overflow: hidden;
-      margin-top: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-
-    #result-box {
-      margin-top: 20px;
-      display: none;
-      text-align: center;
+    p {
+      font-size: 15px;
+      color: #555;
     }
-
-    #barcode-text {
-      font-size: 1rem;
-      padding: 10px;
-      background: #eee;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      margin-bottom: 10px;
-      word-break: break-all;
-    }
-
-    #copy-button {
-      background: #2980b9;
-      color: white;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 5px;
-      font-size: 1rem;
-      cursor: pointer;
-    }
-
-    #copy-button:hover {
-      background: #1c5980;
-    }
-
-    footer {
-      margin-top: 30px;
-      font-size: 0.8rem;
-      color: #999;
+    .status {
+      margin-top: 10px;
+      color: green;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <h1>🔍 Scan Barcode Project</h1>
-
+  <h2>Scan Barcode</h2>
   <div id="reader"></div>
-
-  <div id="result-box">
-    <div id="barcode-text"></div>
-    <button id="copy-button">Salin & Buka</button>
-  </div>
-
-  <footer>© 2025 fajri2714</footer>
+  <p>Setelah scan, hasil otomatis disalin dan kamu diarahkan ke halaman kerja.</p>
+  <p class="status" id="statusText"></p>
 
   <script>
-    let lastResult = null;
-    const resultBox = document.getElementById("result-box");
-    const barcodeText = document.getElementById("barcode-text");
-    const copyButton = document.getElementById("copy-button");
+    const html5QrCode = new Html5Qrcode("reader");
 
     function onScanSuccess(decodedText) {
-      if (decodedText !== lastResult) {
-        lastResult = decodedText;
-        barcodeText.textContent = decodedText;
-        resultBox.style.display = "block";
+      if (!window.scanned) {
+        window.scanned = true;
+        document.getElementById("statusText").innerText = "✅ Terscan: " + decodedText;
+
+        // Salin hasil scan
+        navigator.clipboard.writeText(decodedText).then(() => {
+          console.log("📋 Barcode disalin: " + decodedText);
+        }).catch(err => {
+          console.warn("❌ Gagal salin:", err);
+        });
+
+        // Arahkan ke tujuan
+        const tujuan = `http://52.74.69.49/admin/#/admin/orderprojectscan?code=${encodeURIComponent(decodedText)}`;
+        setTimeout(() => {
+          window.location.href = tujuan;
+        }, 700);
       }
     }
 
-    function onScanError(error) {
-      // Bisa diabaikan
+    function onScanError(errorMessage) {
+      // Bisa abaikan atau tampilkan jika perlu
+      console.warn("Scan gagal: ", errorMessage);
     }
 
-    copyButton.addEventListener("click", () => {
-      if (lastResult) {
-        navigator.clipboard.writeText(lastResult).catch(() => {});
-        const targetURL = `http://52.74.69.49/admin/#/admin/orderprojectscan?code=${encodeURIComponent(lastResult)}`;
-        window.location.href = targetURL;
-      }
-    });
-
-    const html5QrCode = new Html5Qrcode("reader");
+    // Mulai scan dengan pengaturan akurasi tinggi
     html5QrCode.start(
       { facingMode: "environment" },
-      { fps: 10, qrbox: { width: 250, height: 250 } },
+      { fps: 15, qrbox: 300 },
       onScanSuccess,
       onScanError
-    );
+    ).catch(err => {
+      document.getElementById("statusText").innerText = "❌ Kamera tidak tersedia: " + err;
+    });
   </script>
 </body>
 </html>
