@@ -2,6 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Scan Barcode Project</title>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
@@ -10,13 +11,13 @@
       text-align: center;
       background-color: #f4f6f8;
       margin: 0;
-      padding: 30px;
+      padding: 20px;
     }
     h2 {
       color: #007bff;
     }
     #reader {
-      width: 90%;
+      width: 100%;
       max-width: 400px;
       margin: 20px auto;
       border-radius: 12px;
@@ -63,21 +64,22 @@
   <script>
     let scannedText = "";
 
-    // Cek status izin kamera
+    // 1. Cek izin kamera
     if (navigator.permissions) {
-      navigator.permissions.query({ name: 'camera' }).then(permissionStatus => {
-        console.log("Status izin kamera:", permissionStatus.state);
+      navigator.permissions.query({ name: 'camera' }).then(status => {
+        console.log("Status izin kamera:", status.state);
         document.getElementById("permission-info").textContent =
-          "Status izin kamera: " + permissionStatus.state;
+          "Status izin kamera: " + status.state;
 
-        if (permissionStatus.state === 'denied') {
-          alert("Akses kamera ditolak. Aktifkan dari pengaturan browser.");
+        if (status.state === "denied") {
+          alert("Akses kamera ditolak. Silakan aktifkan dari pengaturan browser.");
         }
       }).catch(err => {
         console.warn("Tidak bisa membaca status izin kamera:", err);
       });
     }
 
+    // 2. Inisialisasi saat tombol diklik
     document.getElementById("start-btn").addEventListener("click", function () {
       const readerDiv = document.getElementById("reader");
       readerDiv.style.display = "block";
@@ -86,10 +88,10 @@
       const html5QrCode = new Html5Qrcode("reader");
 
       html5QrCode.start(
-        { facingMode: "environment" }, // Lebih aman untuk semua browser
+        { facingMode: "environment" }, // Lebih aman dan kompatibel
         {
-          fps: 30,
-          qrbox: 350,
+          fps: 15,
+          qrbox: { width: 250, height: 250 },
           aspectRatio: 1.0
         },
         (decodedText) => {
@@ -99,22 +101,21 @@
             document.getElementById("result-text").textContent = scannedText;
             document.getElementById("result-box").style.display = "block";
 
-            html5QrCode.stop().then(() => {
-              console.log("Scanner berhenti.");
-            }).catch((err) => {
-              console.error("Gagal stop:", err);
-            });
+            html5QrCode.stop()
+              .then(() => console.log("Scanner dihentikan."))
+              .catch(err => console.error("Gagal stop scanner:", err));
           }
         },
         (errorMessage) => {
-          // console.warn("Scan gagal:", errorMessage);
+          // console.warn("Scan gagal:", errorMessage); // opsional log
         }
       ).catch((err) => {
-        alert("Gagal mengakses kamera. Periksa izin atau coba browser lain.");
-        console.error("Error start scanner:", err);
+        alert("❌ Gagal mengakses kamera. Coba browser lain atau periksa izin kamera.");
+        console.error("Camera error:", err);
       });
     });
 
+    // 3. Salin hasil dan redirect
     document.getElementById("copy-btn").addEventListener("click", () => {
       if (scannedText) {
         navigator.clipboard.writeText(scannedText)
@@ -128,5 +129,6 @@
       }
     });
   </script>
+
 </body>
 </html>
