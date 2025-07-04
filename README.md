@@ -1,71 +1,82 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
   <meta charset="UTF-8">
-  <title>Scan Barcode - Versi Fix</title>
+  <title>Scan Barcode Project</title>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
     body {
       font-family: sans-serif;
       text-align: center;
-      background-color: #f7f9fc;
-      margin: 0;
-      padding: 0;
-    }
-    h1 {
-      color: #007bff;
-      margin-top: 20px;
+      padding: 20px;
     }
     #reader {
-      width: 90%;
-      max-width: 400px;
-      margin: 0 auto;
-      border-radius: 12px;
-      overflow: hidden;
+      width: 300px;
+      margin: auto;
+      display: none;
     }
-    p {
-      font-size: 15px;
-      color: #333;
-      margin: 20px;
+    #result-box {
+      margin-top: 20px;
+      display: none;
+    }
+    #start-btn, #copy-btn {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin-top: 20px;
     }
   </style>
 </head>
 <body>
-
-  <h1>Scan Barcode</h1>
+  <h2>Scan Barcode Project</h2>
+  <p>Tekan tombol di bawah untuk mulai scan.</p>
+  <button id="start-btn">Mulai Scan</button>
   <div id="reader"></div>
-  <p>Setelah scan, hasil otomatis disalin dan kamu diarahkan ke halaman kerja.</p>
+
+  <div id="result-box">
+    <p><strong>Hasil Scan:</strong> <span id="result-text"></span></p>
+    <button id="copy-btn">Salin & Buka Link</button>
+  </div>
 
   <script>
-    const html5QrCode = new Html5Qrcode("reader");
+    let scannedText = "";
+    
+    document.getElementById("start-btn").addEventListener("click", function () {
+      const readerDiv = document.getElementById("reader");
+      readerDiv.style.display = "block";
+      this.style.display = "none";
 
-    function onScanSuccess(decodedText, decodedResult) {
-      console.log(`Hasil: ${decodedText}`);
+      const html5QrCode = new Html5Qrcode("reader");
 
-      // Salin ke clipboard
-      navigator.clipboard.writeText(decodedText).then(() => {
-        console.log("Disalin ke clipboard:", decodedText);
-      });
+      html5QrCode.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        (decodedText) => {
+          if (!scannedText) {
+            scannedText = decodedText;
 
-      // Redirect ke halaman kerja
-      window.location.href = "http://52.74.69.49/admin/#.login";
-    }
+            document.getElementById("result-text").textContent = scannedText;
+            document.getElementById("result-box").style.display = "block";
+            html5QrCode.stop(); // stop scanner
+          }
+        },
+        (errorMessage) => {
+          // do nothing
+        }
+      );
+    });
 
-    const config = {
-      fps: 15,
-      qrbox: { width: 250, height: 250 },
-      aspectRatio: 1.0
-    };
-
-    html5QrCode.start(
-      { facingMode: "environment" },
-      config,
-      onScanSuccess
-    ).catch(err => {
-      console.error("Gagal memulai kamera belakang:", err);
-      alert("Tidak bisa mengakses kamera belakang. Coba izinkan dari pengaturan browser.");
+    document.getElementById("copy-btn").addEventListener("click", () => {
+      if (scannedText) {
+        navigator.clipboard.writeText(scannedText)
+          .then(() => {
+            const targetURL = `http://52.74.69.49/admin/#/admin/orderprojectscan?code=${encodeURIComponent(scannedText)}`;
+            window.location.href = targetURL;
+          })
+          .catch(err => {
+            alert("Gagal menyalin ke clipboard: " + err);
+          });
+      }
     });
   </script>
-
 </body>
 </html>
