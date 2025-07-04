@@ -16,7 +16,7 @@
       color: #333;
     }
     h2 {
-      margin-bottom: 10px;
+      margin-top: 20px;
       color: #2f80ed;
     }
     #reader {
@@ -39,7 +39,7 @@
   </style>
 </head>
 <body>
-  <h2>Scan Barcode</h2>
+  <h2>🔍 Scan Barcode</h2>
   <div id="reader"></div>
   <p>Setelah scan, hasil otomatis disalin dan kamu diarahkan ke halaman kerja.</p>
   <p class="status" id="statusText"></p>
@@ -50,16 +50,17 @@
     function onScanSuccess(decodedText) {
       if (!window.scanned) {
         window.scanned = true;
-        document.getElementById("statusText").innerText = "✅ Terscan: " + decodedText;
 
-        // Salin hasil scan
+        document.getElementById("statusText").innerText = "✅ Barcode Terdeteksi:\n" + decodedText;
+
+        // Salin ke clipboard
         navigator.clipboard.writeText(decodedText).then(() => {
-          console.log("📋 Barcode disalin: " + decodedText);
+          console.log("📋 Barcode disalin:", decodedText);
         }).catch(err => {
           console.warn("❌ Gagal salin:", err);
         });
 
-        // Arahkan ke tujuan
+        // Redirect ke halaman tujuan
         const tujuan = `http://52.74.69.49/admin/#/admin/orderprojectscan?code=${encodeURIComponent(decodedText)}`;
         setTimeout(() => {
           window.location.href = tujuan;
@@ -68,18 +69,30 @@
     }
 
     function onScanError(errorMessage) {
-      // Bisa abaikan atau tampilkan jika perlu
-      console.warn("Scan gagal: ", errorMessage);
+      // Silent error
+      console.warn("Scan gagal:", errorMessage);
     }
 
-    // Mulai scan dengan pengaturan akurasi tinggi
+    const config = {
+      fps: 15,
+      qrbox: 400,
+      disableFlip: true,
+      formatsToSupport: [
+        Html5QrcodeSupportedFormats.QR_CODE,
+        Html5QrcodeSupportedFormats.CODE_128,
+        Html5QrcodeSupportedFormats.CODE_39,
+        Html5QrcodeSupportedFormats.EAN_13,
+        Html5QrcodeSupportedFormats.UPC_A
+      ]
+    };
+
     html5QrCode.start(
       { facingMode: "environment" },
-      { fps: 15, qrbox: 300 },
+      config,
       onScanSuccess,
       onScanError
     ).catch(err => {
-      document.getElementById("statusText").innerText = "❌ Kamera tidak tersedia: " + err;
+      document.getElementById("statusText").innerText = "❌ Kamera gagal dibuka: " + err;
     });
   </script>
 </body>
